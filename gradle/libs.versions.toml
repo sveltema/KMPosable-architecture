@@ -1,0 +1,42 @@
+[versions]
+## library version
+libraryVersion = "0.1.0-SNAPSHOT"
+
+## SDK Versions
+minSdk = "26"
+targetSdk = "34"
+compileSdk = "34"
+
+# Dependencies
+android-gradle-plugin = "8.1.1"
+
+kotlin = "1.9.10"
+coroutines = "1.7.3"
+dokka = "1.9.10"
+
+ktlint-gradle = "11.6.0"
+
+junit = "4.13.2"
+turbine = "1.0.0"
+
+[libraries]
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+
+junit = { module = "junit:junit", version.ref = "junit" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+
+[plugins]
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-gradle" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+android-library = { id = "com.android.library", version.ref = "android-gradle-plugin" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+
+[bundles]
+commonTest = [
+    "kotlin-test",
+    "coroutines-test",
+    "turbine"
+]
