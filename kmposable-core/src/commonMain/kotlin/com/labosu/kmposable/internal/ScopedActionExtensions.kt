@@ -1,5 +1,10 @@
-package com.labosu.kmposable
+package com.labosu.kmposable.internal
 
+import com.labosu.kmposable.CompletedException
+import com.labosu.kmposable.Effect
+import com.labosu.kmposable.Mutable
+import com.labosu.kmposable.Reducer
+import com.labosu.kmposable.ScopedAction
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.awaitCancellation
@@ -19,10 +24,6 @@ import kotlinx.coroutines.launch
  * resulting effect only while the provided CoroutineScope is active.
  * Once the scope becomes inactive, the effect will cancel
  */
-
-interface ScopedAction {
-    val scope: CoroutineScope
-}
 
 internal fun <Action> Effect<Action>.scoped(scope: CoroutineScope): Effect<Action> = Effect {
     //use a notifier to stop the flow immediately when the scope is cancelled

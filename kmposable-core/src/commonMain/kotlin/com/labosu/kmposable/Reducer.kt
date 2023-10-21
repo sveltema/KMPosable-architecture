@@ -1,5 +1,6 @@
 package com.labosu.kmposable
 
+import com.labosu.kmposable.internal.reduceScoped
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.merge
@@ -22,7 +23,6 @@ fun <State, Action> loggingReducer(
             postLambda(state.invoke(), action)
         }
     }
-
 
 fun <State, Action> emptyReducer(): Reducer<State, Action> = Reducer { _, _ -> emptyEffect() }
 
