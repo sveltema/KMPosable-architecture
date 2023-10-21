@@ -83,9 +83,6 @@ publishing {
     publications {
         withType<MavenPublication> {
 
-//        create<MavenPublication>("KMPosable-architecture") {
-//            from(components["kotlin"])
-
             pom {
                 artifactId = "kmposable"
                 name.set("KMPosable-architecture")

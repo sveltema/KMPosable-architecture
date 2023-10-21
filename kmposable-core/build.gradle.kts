@@ -80,10 +80,6 @@ version = libs.versions.libraryVersion.get()
 publishing {
     publications {
         withType<MavenPublication> {
-
-//        create<MavenPublication>("KMPosable-architecture") {
-//            from(components["kotlin"])
-
             pom {
                 artifactId = "kmposable-core"
                 name.set("KMPosable-architecture")
