@@ -10,9 +10,10 @@ loostly based on [Toggl's Android implementation](https://github.com/toggl/kompo
 
 ## © Differences from Toggl's komposable-architecture
 * Kotlin Multiplatform support for use in KMM projects
-* The `Effect` interface is based on `Flows` instead of suspending functions
-* Removal of `Subscriptions` and supporting long running running and cancellation
-* Addition of `ScopedActions` for providing scopes for limiting the scope of long running effects
+* The `Effect` interface is based on `Flows` instead of suspending functions allowing for long running Effects
+* Addition of explicit cancellation of Effects
+* Addition of `ScopedActions` for providing scopes for long running effects (for example ViewModelScopes in Android)
+* Removal of `Subscriptions`
 * An improved `MutableStateFlowStore` send function with support for buffering and batching actions.
 * Minor name changes to more closely match the original Swift implementation
 
