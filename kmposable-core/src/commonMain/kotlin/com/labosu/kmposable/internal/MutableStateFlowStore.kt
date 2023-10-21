@@ -4,6 +4,7 @@ import com.labosu.kmposable.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import kotlin.coroutines.ContinuationInterceptor
 
 internal class MutableStateFlowStore<State, Action : Any> private constructor(
     override val state: Flow<State>,
@@ -60,7 +61,12 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
                     ensureActive()
 
                     var backingValue = mutableStateFlow.value
-                    val mutableValue = Mutable({ backingValue }) { backingValue = it }
+                    val mutableValue = Mutable({ backingValue }) {
+                        require(coroutineContext[ContinuationInterceptor] == storeMutateDispatcher) {
+                            "Invalid mutation of state outside MutableStateFlowStore dispatcher"
+                        }
+                        backingValue = it
+                    }
 
                     //get next X actions waiting in buffer channel and group together for faster processing
                     //don't suspend waiting for next result, try to get one and fail if not present
