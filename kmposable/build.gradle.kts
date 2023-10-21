@@ -84,7 +84,6 @@ publishing {
         withType<MavenPublication> {
 
             pom {
-                artifactId = "kmposable"
                 name.set("KMPosable-architecture")
                 description.set("TCA like library for Kotlin Multiplatform Mobile applications")
                 url.set("https://maven.pkg.github.com/sveltema/KMPosable-architecture")
