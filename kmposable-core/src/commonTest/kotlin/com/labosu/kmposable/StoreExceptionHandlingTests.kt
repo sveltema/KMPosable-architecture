@@ -4,7 +4,7 @@ package com.labosu.kmposable
 
 import com.labosu.kmposable.internal.MutableStateFlowStore
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -26,9 +26,8 @@ class StoreExceptionHandlingTests : StoreCoroutineTest() {
     fun `reduce exception should be handled`() {
         assertFailsWith<MutableStateFlowStore.Companion.ReducerException> {
             testCoroutineScope.runTest {
-                testStore.send(TestAction.ThrowExceptionAction).also {
-                    testCoroutineScope.runCurrent()
-                }
+                testStore.send(TestAction.ThrowExceptionAction)
+                delay(1)
             }
         }
     }
@@ -37,9 +36,8 @@ class StoreExceptionHandlingTests : StoreCoroutineTest() {
     fun `effect exception should be handled`() {
         assertFailsWith<MutableStateFlowStore.Companion.EffectException> {
             testCoroutineScope.runTest {
-                testStore.send(TestAction.StartExceptionThrowingEffectAction).also {
-                    testCoroutineScope.runCurrent()
-                }
+                testStore.send(TestAction.StartExceptionThrowingEffectAction)
+                delay(1)
             }
         }
     }

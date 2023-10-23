@@ -3,7 +3,7 @@
 package com.labosu.kmposable
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -26,7 +26,7 @@ class StoreReducerTests : StoreCoroutineTest() {
     @Test
     fun `reducer should be called exactly once if one action is sent`() = testCoroutineScope.runTest {
         testStore.send(TestAction.DoNothingAction)
-        testCoroutineScope.runCurrent()
+        delay(1)
         assertTrue { testReducer.reduceCount == 1 }
     }
 
@@ -41,7 +41,7 @@ class StoreReducerTests : StoreCoroutineTest() {
         )
 
         actionList.forEach {  testStore.send(it)}
-        testCoroutineScope.runCurrent()
+        delay(100)
 
         //add the effect action
         actionList.add(TestAction.DoNothingFromEffectAction)

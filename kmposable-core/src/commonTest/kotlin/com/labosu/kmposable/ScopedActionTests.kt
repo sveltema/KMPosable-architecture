@@ -6,9 +6,9 @@ import app.cash.turbine.test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -35,7 +35,7 @@ class ScopedActionTests : StoreCoroutineTest() {
             val effectScope = TestScope(StandardTestDispatcher())
             assertEquals("", awaitItem().testProperty)
             testStore.send(TestAction.LongRunningScopedEffectAction(effectScope))
-            testCoroutineScope.runCurrent()
+            delay(1)
 
             //the value should increment by 1
             var property = awaitItem().testProperty.toInt()
