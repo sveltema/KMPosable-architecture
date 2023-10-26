@@ -41,34 +41,25 @@ class TestReducer : Reducer<TestState, TestAction> {
     var reduceCount: Int = 0
     val actions = mutableListOf<TestAction>()
 
-    override fun reduce(state: Mutable<TestState>, action: TestAction): Effect<TestAction> {
+    override fun reduce(state: TestState, action: TestAction): Reduced<TestState, TestAction> {
         reduceCount++
         actions.add(action)
 
         return when (action) {
-            is TestAction.ChangeTestProperty -> state.mutateWithoutEffects {
-                copy(testProperty = action.testProperty)
-            }
+            is TestAction.ChangeTestProperty -> Reduced(state.copy(testProperty = action.testProperty))
+            is TestAction.AddToTestProperty -> Reduced(state.copy(testProperty = state.testProperty + action.testPropertySuffix))
+            TestAction.ClearTestPropertyFromEffect -> Reduced(state.copy(testProperty = ""))
 
-            is TestAction.AddToTestProperty -> state.mutateWithoutEffects {
-                copy(testProperty = testProperty + action.testPropertySuffix)
-            }
-
-            TestAction.ClearTestPropertyFromEffect -> state.mutateWithoutEffects {
-                copy(testProperty = "")
-            }
-
-            is TestAction.StartEffectAction -> action.effect
-            TestAction.DoNothingAction -> noEffect()
-            TestAction.DoNothingFromEffectAction -> noEffect()
+            is TestAction.StartEffectAction -> Reduced(state, action.effect)
+            TestAction.DoNothingAction -> Reduced(state)
+            TestAction.DoNothingFromEffectAction -> Reduced(state)
             TestAction.ThrowExceptionAction -> throw Exception("ThrowExceptionAction")
-            TestAction.StartExceptionThrowingEffectAction -> Effect {
+            TestAction.StartExceptionThrowingEffectAction -> Reduced(state) {
                 flow {
-                    throw IllegalStateException("THIS SHOULD THROW")//throw an exception
+                    throw IllegalStateException("THIS SHOULD THROW")
                 }
             }
-
-            is TestAction.LongRunningScopedEffectAction -> Effect {
+            is TestAction.LongRunningScopedEffectAction -> Reduced(state) {
                 flow {
                     var cnt = 1
                     while (true) {

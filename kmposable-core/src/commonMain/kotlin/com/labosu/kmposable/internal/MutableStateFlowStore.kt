@@ -60,14 +60,6 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
                 storeScope.launch(context = storeMutateDispatcher) {
                     ensureActive()
 
-                    var backingValue = mutableStateFlow.value
-                    val mutableValue = Mutable({ backingValue }) {
-                        require(coroutineContext[ContinuationInterceptor] == storeMutateDispatcher) {
-                            "Invalid mutation of state outside MutableStateFlowStore dispatcher"
-                        }
-                        backingValue = it
-                    }
-
                     //get next X actions waiting in buffer channel and group together for faster processing
                     //don't suspend waiting for next result, try to get one and fail if not present
                     val bufferedActions = mutableListOf<Action>()
@@ -76,12 +68,15 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
                         bufferedActions.add(element)
                     }
 
+                    if (bufferedActions.isEmpty()) return@launch
+
                     //gather all of the effects returned by the reducers
+                    var backingValue = mutableStateFlow.value
                     val effects = bufferedActions.mapNotNull { action ->
                         try {
-                            val effect = reducer.reduceScoped(mutableValue, action)
-                            //remove empty effects
-                            if (effect != none) effect else null
+                            reducer.reduceScoped(backingValue, action)
+                                .also { backingValue = it.state }
+                                .effect
                         } catch (cause: Throwable) {
                             exceptionHandler.handleReduceException(backingValue, action, cause)
                             null
@@ -89,7 +84,7 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
                     }
 
                     //set the final state
-                    mutableStateFlow.update { mutableValue() }
+                    mutableStateFlow.update { backingValue }
 
                     val effect = when {
                         effects.isEmpty() -> return@launch
