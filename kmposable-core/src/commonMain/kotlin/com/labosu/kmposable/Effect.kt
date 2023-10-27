@@ -25,7 +25,6 @@ fun <Action> (suspend () -> Unit).fireAndForget(): Effect<Action> = flow<Nothing
 // transformations
 inline fun <Action, R> Effect<Action>.map(crossinline mapFn: suspend (Action) -> R): Effect<R> = this.invoke().map { mapFn(it) }.asEffect()
 
-@OptIn(ExperimentalCoroutinesApi::class)
 fun <Action> Iterable<Effect<Action>>.merge() = this.map { it.invoke() }.merge().asEffect()
 
 @OptIn(ExperimentalCoroutinesApi::class)

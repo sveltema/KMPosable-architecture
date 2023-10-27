@@ -4,7 +4,6 @@ import com.labosu.kmposable.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
-import kotlin.coroutines.ContinuationInterceptor
 
 internal class MutableStateFlowStore<State, Action : Any> private constructor(
     override val state: Flow<State>,
