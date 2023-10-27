@@ -2,7 +2,7 @@ package com.labosu.kmposable.internal
 
 import com.labosu.kmposable.CompletedException
 import com.labosu.kmposable.Effect
-import com.labosu.kmposable.Mutable
+import com.labosu.kmposable.Reduced
 import com.labosu.kmposable.Reducer
 import com.labosu.kmposable.ScopedAction
 import kotlinx.coroutines.CoroutineScope
@@ -61,9 +61,9 @@ internal fun <Action> Effect<Action>.scoped(scope: CoroutineScope): Effect<Actio
         .takeWhile { scope.isActive }
 }
 
-internal fun <State, Action> Reducer<State, Action>.reduceScoped(state: Mutable<State>, action: Action): Effect<Action> {
+internal fun <State, Action> Reducer<State, Action>.reduceScoped(state: State, action: Action): Reduced<State, Action> {
     return if (action is ScopedAction) {
-        reduce(state, action).scoped(action.scope)
+        reduce(state, action).let { it.copy(effect = it.effect?.scoped(action.scope)) }
     } else {
         reduce(state, action)
     }

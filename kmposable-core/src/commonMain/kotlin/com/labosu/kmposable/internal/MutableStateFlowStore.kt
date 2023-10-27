@@ -4,7 +4,6 @@ import com.labosu.kmposable.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
-import kotlin.coroutines.ContinuationInterceptor
 
 internal class MutableStateFlowStore<State, Action : Any> private constructor(
     override val state: Flow<State>,
@@ -60,14 +59,6 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
                 storeScope.launch(context = storeMutateDispatcher) {
                     ensureActive()
 
-                    var backingValue = mutableStateFlow.value
-                    val mutableValue = Mutable({ backingValue }) {
-                        require(coroutineContext[ContinuationInterceptor] == storeMutateDispatcher) {
-                            "Invalid mutation of state outside MutableStateFlowStore dispatcher"
-                        }
-                        backingValue = it
-                    }
-
                     //get next X actions waiting in buffer channel and group together for faster processing
                     //don't suspend waiting for next result, try to get one and fail if not present
                     val bufferedActions = mutableListOf<Action>()
@@ -76,12 +67,15 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
                         bufferedActions.add(element)
                     }
 
+                    if (bufferedActions.isEmpty()) return@launch
+
                     //gather all of the effects returned by the reducers
+                    var backingValue = mutableStateFlow.value
                     val effects = bufferedActions.mapNotNull { action ->
                         try {
-                            val effect = reducer.reduceScoped(mutableValue, action)
-                            //remove empty effects
-                            if (effect != none) effect else null
+                            reducer.reduceScoped(backingValue, action)
+                                .also { backingValue = it.state }
+                                .effect
                         } catch (cause: Throwable) {
                             exceptionHandler.handleReduceException(backingValue, action, cause)
                             null
@@ -89,7 +83,7 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
                     }
 
                     //set the final state
-                    mutableStateFlow.update { mutableValue() }
+                    mutableStateFlow.update { backingValue }
 
                     val effect = when {
                         effects.isEmpty() -> return@launch
@@ -115,7 +109,7 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
 
         private suspend fun <State, Action> ExceptionHandler.handleReduceException(state: State, action: Action, exception: Throwable): Effect<Nothing> {
             val wrappedException = ReducerException("[ReducerException]($action): $state", exception)
-            if (handleException(wrappedException)) return noEffect() else throw wrappedException
+            if (handleException(wrappedException)) return emptyEffect() else throw wrappedException
         }
 
         class EffectException(override val message: String?, override val cause: Throwable?) : Throwable(message, cause)
