@@ -110,7 +110,7 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
 
         private suspend fun <State, Action> ExceptionHandler.handleReduceException(state: State, action: Action, exception: Throwable): Effect<Nothing> {
             val wrappedException = ReducerException("[ReducerException]($action): $state", exception)
-            if (handleException(wrappedException)) return noEffect() else throw wrappedException
+            if (handleException(wrappedException)) return emptyEffect() else throw wrappedException
         }
 
         class EffectException(override val message: String?, override val cause: Throwable?) : Throwable(message, cause)
