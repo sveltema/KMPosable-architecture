@@ -13,7 +13,7 @@ fun <Action> emptyEffect(): Effect<Action> = none
 // asEffect functions
 fun <Action> Flow<Action>.asEffect(): Effect<Action> = Effect { this }
 
-fun <Action> Action.asEffect(): Effect<Action> = Effect { flowOf(this) }
+fun <Action> Action.asEffect(): Effect<Action> = flowOf(this).asEffect()
 fun <Action> Iterable<Action>.asEffect(): Effect<Action> = this.asFlow().asEffect()
 
 fun <Action> (() -> Action).asEffect(): Effect<Action> = flow { emit(invoke()) }.asEffect()
