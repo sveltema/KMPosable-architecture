@@ -18,7 +18,7 @@ private val cancellationMutex = Mutex()
 //the scope/tokenSet pair uses the scope for cancellation and tokenSet to control individual flow completion and cache cleanup
 private val cancellableFlowSignals = mutableMapOf<Any, Pair<MutableSharedFlow<Boolean>, MutableSet<Long>>>()
 
-internal class CompletedException() : Exception("Cancellable has completed")
+internal class CompletedException : Exception("Cancellable has completed")
 
 //use a MutableSharedFlow as a signal to cancel the effect flow
 fun <Action> Effect<Action>.cancellable(cancellationId: Any, cancelInFlight: Boolean = false): Effect<Action> =
@@ -55,7 +55,7 @@ fun <Action> Effect<Action>.cancellable(cancellationId: Any, cancelInFlight: Boo
         }
             .onCompletion {
                 cancellationMutex.withLock {
-                    val tokenSet = cancellableFlowSignals.get(cancellationId)?.second?.apply {
+                    val tokenSet = cancellableFlowSignals[cancellationId]?.second?.apply {
                         remove(flowToken)
                     }
                     if (tokenSet.isNullOrEmpty()) cancellableFlowSignals.remove(cancellationId)
