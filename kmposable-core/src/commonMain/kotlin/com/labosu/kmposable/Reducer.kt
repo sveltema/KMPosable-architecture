@@ -2,8 +2,6 @@ package com.labosu.kmposable
 
 import com.labosu.kmposable.internal.reduceScoped
 
-data class Reduced<out State, Action>(val state: State, val effect: Effect<Action>? = null)
-
 fun interface Reducer<State, Action> {
     fun reduce(state: State, action: Action): Reduced<State, Action>
 }
