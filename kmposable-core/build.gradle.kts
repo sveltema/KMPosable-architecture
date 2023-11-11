@@ -9,14 +9,12 @@ plugins {
 kotlin {
     version = libs.versions.libraryVersion
 
-    @OptIn(ExperimentalKotlinGradlePluginApi::class)
-    targetHierarchy.default()
+    applyDefaultHierarchyTemplate()
 
     androidTarget {
         publishAllLibraryVariants()
     }
 
-    ios()
     iosSimulatorArm64()
 
     sourceSets {
