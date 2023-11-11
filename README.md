@@ -1,14 +1,14 @@
 # KMP-composable-architecture
 
 Kotlin Multiplatform implementation of [Point-Free's The Composable Architecture](https://github.com/pointfreeco/swift-composable-architecture)
-loostly based on [Toggl's Android implementation](https://github.com/toggl/komposable-architecture) but with several fundamental changes and improvements.
+loosely based on [Toggl's Android implementation](https://github.com/toggl/komposable-architecture) but with several fundamental changes and improvements.
 
 ## Version information:
 | Version       | Kotlin | Coroutines |
 |---------------|--------|:----------:|
 | _latest_      | 1.9.10 |   1.7.3    |
 
-## © Differences from Toggl's komposable-architecture
+## Differences from Toggl's komposable-architecture
 * Kotlin Multiplatform support for use in KMM projects
 * The `Effect` interface is based on `Flows` instead of suspending functions allowing for long running Effects
 * Addition of explicit cancellation of Effects
