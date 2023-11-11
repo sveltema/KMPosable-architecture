@@ -11,18 +11,14 @@ import kotlinx.coroutines.flow.Flow
 interface Store<State, Action : Any> {
 
     /**
-     * A flow that emits whenever the state of the application changes
+     * A flow that emits whenever the state changes
      */
     val state: Flow<State>
 
     /**
-     * Sends actions to be processed by the internal reducer
-     * If multiple actions are sent, the state will still only emit
-     * once all actions are processed in a batch
-     * @see state
+     * Sends actions to be processed
      */
     fun send(action: Action)
-
     fun send(actions: Iterable<Action>)
 
     /**
