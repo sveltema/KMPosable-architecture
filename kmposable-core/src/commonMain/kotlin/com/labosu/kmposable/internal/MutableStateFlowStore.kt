@@ -83,7 +83,7 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
                     }
 
                     //set the final state
-                    mutableStateFlow.update { backingValue }
+                    mutableStateFlow.value = backingValue
 
                     val effect = when {
                         effects.isEmpty() -> return@launch
