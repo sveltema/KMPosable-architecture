@@ -1,14 +1,14 @@
-@file:OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-
 package com.labosu.kmposable
 
 import app.cash.turbine.test
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -38,11 +38,11 @@ class EffectCancellationTests : StoreCoroutineTest() {
     @Test
     fun `test completion the emission of a cancellableEffect`() = testCoroutineScope.runTest {
         val testCancellableEffect = Effect {
-            channelFlow<Int> {
+            channelFlow {
                 withContext(Dispatchers.Default) {
                     send(1)
                     send(2)
-                    //delay the third value to allow time for cancellation to complete the flow
+                    // delay the third value to allow time for cancellation to complete the flow
                     delay(2000)
                     send(3)
                 }
@@ -57,5 +57,4 @@ class EffectCancellationTests : StoreCoroutineTest() {
             awaitComplete()
         }
     }
-
 }

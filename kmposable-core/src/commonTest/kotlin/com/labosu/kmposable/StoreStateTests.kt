@@ -1,9 +1,6 @@
-@file:OptIn(ExperimentalCoroutinesApi::class)
-
 package com.labosu.kmposable
 
 import app.cash.turbine.test
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test

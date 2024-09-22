@@ -7,7 +7,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 
-
 interface Store<State, Action : Any> {
 
     /**
@@ -47,7 +46,6 @@ interface Store<State, Action : Any> {
 
     val actionless: Store<State, Nothing>
         get() = this.optionalScope(toChildState = { cst: State -> cst }, fromChildAction = { null })
-
 }
 
 fun <State, Action : Any> createStore(

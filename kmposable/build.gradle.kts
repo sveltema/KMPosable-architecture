@@ -1,6 +1,3 @@
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import java.net.URI
-
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
@@ -16,6 +13,8 @@ kotlin {
         publishAllLibraryVariants()
     }
 
+    iosX64()
+    iosArm64()
     iosSimulatorArm64()
 
     sourceSets {

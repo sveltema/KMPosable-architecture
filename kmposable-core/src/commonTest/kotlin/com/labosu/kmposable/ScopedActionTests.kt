@@ -1,10 +1,6 @@
-@file:OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-
 package com.labosu.kmposable
 
 import app.cash.turbine.test
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.StandardTestDispatcher
