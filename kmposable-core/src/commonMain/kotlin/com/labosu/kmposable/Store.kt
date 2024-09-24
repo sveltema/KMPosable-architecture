@@ -41,8 +41,12 @@ interface Store<State, Action : Any> {
         toChildState: (State) -> ChildState
     ): Store<ChildState, Action>
 
+    fun <ChildAction : Any> actionScope(
+        fromChildAction: (ChildAction) -> Action?
+    ): Store<State, ChildAction>
+
     val stateless: Store<Unit, Action>
-        get() = this.scope { }
+        get() = this.scope(toChildState = { })
 
     val actionless: Store<State, Nothing>
         get() = this.optionalScope(toChildState = { cst: State -> cst }, fromChildAction = { null })

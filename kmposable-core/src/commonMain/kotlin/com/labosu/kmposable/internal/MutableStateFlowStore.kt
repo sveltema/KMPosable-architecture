@@ -52,6 +52,13 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
         sendFn = sendFn
     )
 
+    override fun <ChildAction : Any> actionScope(
+        fromChildAction: (ChildAction) -> Action?
+    ): Store<State, ChildAction> = MutableStateFlowStore(
+        state = state,
+        sendFn = { childAction: ChildAction -> fromChildAction(childAction)?.let { sendFn(it) } }
+    )
+
     companion object {
         @OptIn(ExperimentalCoroutinesApi::class)
         fun <State, Action : Any> create(
@@ -128,7 +135,11 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
             cause
         )
 
-        private suspend fun <State, Action> ExceptionHandler.handleReduceException(state: State, action: Action, exception: Throwable): Effect<Nothing> {
+        private suspend fun <State, Action> ExceptionHandler.handleReduceException(
+            state: State,
+            action: Action,
+            exception: Throwable
+        ): Effect<Nothing> {
             val wrappedException = ReducerException("[ReducerException]($action): $state", exception)
             if (handleException(wrappedException)) return emptyEffect() else throw wrappedException
         }
