@@ -38,4 +38,4 @@ google-services.json
 
 # Android Profiling
 *.hprof
-/.kotlin
+.kotlin
