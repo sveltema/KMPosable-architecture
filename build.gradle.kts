@@ -7,12 +7,7 @@ plugins {
     alias(libs.plugins.dokka) apply false
 }
 
-tasks.register("clean", Delete::class) {
-    delete(rootProject.buildDir)
-}
-
 allprojects {
-    apply(plugin = "org.jetbrains.dokka")
     repositories {
         mavenCentral()
         google()

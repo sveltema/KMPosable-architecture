@@ -60,7 +60,6 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
     )
 
     companion object {
-        @OptIn(ExperimentalCoroutinesApi::class)
         fun <State, Action : Any> create(
             initialState: State,
             reducer: Reducer<State, Action>,

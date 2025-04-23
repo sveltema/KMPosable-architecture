@@ -2,6 +2,7 @@ plugins {
     id("com.android.library")
     kotlin("multiplatform")
     id("maven-publish")
+    id("org.jetbrains.dokka")
 }
 
 kotlin {
@@ -17,6 +18,10 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
 
+    compilerOptions {
+        allWarningsAsErrors.set(true)
+    }
+
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -26,32 +31,6 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(libs.bundles.commonTest)
-            }
-        }
-
-        val androidMain by getting {
-            dependsOn(commonMain)
-        }
-        val androidUnitTest by getting {
-            dependsOn(commonTest)
-        }
-
-        val iosSimulatorArm64Main by getting
-        val iosMain by getting {
-            dependsOn(commonMain)
-            iosSimulatorArm64Main.dependsOn(this)
-        }
-        val iosSimulatorArm64Test by getting
-        val iosTest by getting {
-            dependsOn(commonTest)
-            iosSimulatorArm64Test.dependsOn(this)
-        }
-    }
-
-    targets.all {
-        compilations.all {
-            kotlinOptions {
-                allWarningsAsErrors = true
             }
         }
     }
