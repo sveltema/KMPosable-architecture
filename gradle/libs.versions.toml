@@ -4,18 +4,18 @@ libraryVersion = "0.1.2"
 
 ## SDK Versions
 minSdk = "26"
-compileSdk = "34"
+compileSdk = "35"
 
 # Dependencies
-android-gradle-plugin = "8.1.4"
+android-gradle-plugin = "8.10.0"
 
-kotlin = "2.1.0"
+kotlin = "2.1.21"
 coroutines = "1.10.2"
 dokka = "2.0.0"
 
-ktlint-gradle = "12.1.1"
+ktlint-gradle = "12.3.0"
 
-turbine = "1.0.0"
+turbine = "1.2.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

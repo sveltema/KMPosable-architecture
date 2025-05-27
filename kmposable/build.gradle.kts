@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
@@ -12,6 +14,13 @@ kotlin {
 
     androidTarget {
         publishAllLibraryVariants()
+        compilations.all {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    jvmTarget.set(JvmTarget.JVM_1_8)
+                }
+            }
+        }
     }
 
     iosX64()
@@ -23,15 +32,12 @@ kotlin {
     }
 
     sourceSets {
-        val commonMain by getting {
-            dependencies {
-                api(project(":kmposable-core"))
-            }
+        commonMain.dependencies {
+            //put your multiplatform dependencies here
+            api(project(":kmposable-core"))
         }
-        val commonTest by getting {
-            dependencies {
-                implementation(libs.bundles.commonTest)
-            }
+        commonTest.dependencies {
+            implementation(libs.bundles.commonTest)
         }
     }
 }
@@ -46,10 +52,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
 }
 
 group = "com.labosu.kmposable"
