@@ -8,16 +8,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.labosu.kmposable.Store
 import com.labosu.kmposable.example.tictactoe.android.MyApplicationTheme
 import com.labosu.kmposable.example.tictactoe.start.StartGameFeature
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 
 @Composable
-fun NewGameView(store: Store<StartGameFeature.State, StartGameFeature.Action>, modifier: Modifier = Modifier) {
+fun NewGameView(
+    store: Store<StartGameFeature.State, StartGameFeature.Action>,
+    modifier: Modifier = Modifier
+) {
     val p1Name by store.state.map { it.playerOneName }.collectAsStateWithLifecycle("")
     val p2Name by store.state.map { it.playerTwoName }.collectAsStateWithLifecycle("")
 
@@ -30,6 +36,7 @@ fun NewGameView(store: Store<StartGameFeature.State, StartGameFeature.Action>, m
             label = { Text("Player 1 Name") },
             modifier = Modifier.padding(bottom = 8.dp)
         )
+            .focus
         OutlinedTextField(
             value = p2Name,
             onValueChange = { store.send(StartGameFeature.Action.UpdatePlayerTwoName(it)) },
