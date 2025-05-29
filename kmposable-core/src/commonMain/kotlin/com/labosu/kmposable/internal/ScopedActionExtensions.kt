@@ -28,6 +28,8 @@ import kotlinx.coroutines.launch
 internal fun <Action> Effect<Action>.scoped(scope: CoroutineScope): Effect<Action> =
     Effect {
         // use a notifier to stop the flow immediately when the scope is cancelled
+        // the problem with `.takeWhile` is that it requires an additional emission
+        // before the flow is canceled
         val notifier = channelFlow {
             val waitJob = scope.launch {
                 // wait for scope to be cancelled
