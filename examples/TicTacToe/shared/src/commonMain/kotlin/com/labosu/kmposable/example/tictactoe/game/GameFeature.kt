@@ -4,7 +4,7 @@ import com.labosu.kmposable.Reduced
 import com.labosu.kmposable.Reducer
 import com.labosu.kmposable.Store
 import com.labosu.kmposable.example.tictactoe.AppFeature
-import com.labosu.kmposable.example.tictactoe.appStore
+import com.labosu.kmposable.example.tictactoe.start.StartGameFeature.Action
 import com.labosu.kmposable.noEffect
 import com.labosu.kmposable.optionalPullback
 import com.labosu.kmposable.withEffect
@@ -50,7 +50,11 @@ object GameFeature : Reducer<GameFeature.State, GameFeature.Action> {
     override fun reduce(state: State, action: Action): Reduced<State, Action> {
         return when (action) {
             is Action.CellTapped -> {
-                if (state.board.getCell(action.row, action.column) != null || state.board.boardState != GameBoard.State.InPlay) {
+                if (state.board.getCell(
+                        action.row,
+                        action.column
+                    ) != null || state.board.boardState != GameBoard.State.InPlay
+                ) {
                     return state.noEffect()
                 }
 
@@ -60,7 +64,8 @@ object GameFeature : Reducer<GameFeature.State, GameFeature.Action> {
 
                 if (newBoard.boardState == GameBoard.State.InPlay) {
                     // toggle to other player
-                    val nextPlayer = if (state.playerOne == state.currentPlayer) state.playerTwo else state.playerOne
+                    val nextPlayer =
+                        if (state.playerOne == state.currentPlayer) state.playerTwo else state.playerOne
                     state.copy(board = newBoard, currentPlayer = nextPlayer).noEffect()
                 } else {
                     // ensure state updates
@@ -73,12 +78,7 @@ object GameFeature : Reducer<GameFeature.State, GameFeature.Action> {
                 state.copy(currentPlayer = state.playerOne, board = GameBoard()).noEffect()
             }
 
-            Action.EndTapped -> state.withEffect {
-                // This is not particularly great but sending to appStore
-                // lets us send actions outside the existing feature
-                appStore.send(AppFeature.Action.EndGame)
-                null
-            }
+            Action.EndTapped -> state.noEffect()  // handled in AppFeature
         }
     }
 }

@@ -36,7 +36,6 @@ fun NewGameView(
             label = { Text("Player 1 Name") },
             modifier = Modifier.padding(bottom = 8.dp)
         )
-            .focus
         OutlinedTextField(
             value = p2Name,
             onValueChange = { store.send(StartGameFeature.Action.UpdatePlayerTwoName(it)) },

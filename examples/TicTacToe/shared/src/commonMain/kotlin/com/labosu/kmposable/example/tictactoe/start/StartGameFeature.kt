@@ -4,10 +4,8 @@ import com.labosu.kmposable.Reduced
 import com.labosu.kmposable.Reducer
 import com.labosu.kmposable.Store
 import com.labosu.kmposable.example.tictactoe.AppFeature
-import com.labosu.kmposable.example.tictactoe.appStore
 import com.labosu.kmposable.noEffect
 import com.labosu.kmposable.pullback
-import com.labosu.kmposable.withEffect
 
 object StartGameFeature : Reducer<StartGameFeature.State, StartGameFeature.Action> {
 
@@ -35,16 +33,8 @@ object StartGameFeature : Reducer<StartGameFeature.State, StartGameFeature.Actio
                 state.copy(playerTwoName = action.name).noEffect()
             }
 
-            Action.StartGameTapped -> {
-                if (state.playerOneName.isNotBlank() && state.playerTwoName.isNotBlank())
-                    state.withEffect {
-                        // use an Effect to send non-feature Actions
-                        appStore.send(AppFeature.Action.StartGame)
-                        null
-                    }
-                else
-                    state.noEffect()
-            }
+            Action.StartGameTapped -> state.noEffect()  // handled in AppFeature
+
         }
     }
 

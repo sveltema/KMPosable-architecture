@@ -40,8 +40,23 @@ object AppFeature : Reducer<AppFeature.State, AppFeature.Action> {
             Action.EndGame ->
                 state.copy(game = null).noEffect()
 
-            else ->
-                state.noEffect()
+            is Action.StartGameFeatureAction -> {
+                when (action.action) {
+                    StartGameFeature.Action.StartGameTapped -> {
+                        return reduce(state, Action.StartGame) // Dispatch StartGame to self
+                    }
+                    else -> state.noEffect()
+                }
+            }
+
+            is Action.GameFeatureAction -> {
+                when (action.action) {
+                    GameFeature.Action.EndTapped -> {
+                        return reduce(state, Action.EndGame) // Dispatch EndGame to self
+                    }
+                    else -> state.noEffect()
+                }
+            }
         }
     }
 }
