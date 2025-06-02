@@ -25,8 +25,14 @@ object AppFeature : Reducer<AppFeature.State, AppFeature.Action> {
 
     // ----- STATE ----------------
     data class State(
-        val playerOne: GameFeature.Player = GameFeature.Player("Player 1", GameFeature.PlayerSymbol.X),
-        val playerTwo: GameFeature.Player = GameFeature.Player("Player 2", GameFeature.PlayerSymbol.O),
+        val playerOne: GameFeature.Player = GameFeature.Player(
+            "Player 1",
+            GameFeature.PlayerSymbol.X
+        ),
+        val playerTwo: GameFeature.Player = GameFeature.Player(
+            "Player 2",
+            GameFeature.PlayerSymbol.O
+        ),
         val game: GameFeature.State? = null
     )
 
@@ -34,29 +40,16 @@ object AppFeature : Reducer<AppFeature.State, AppFeature.Action> {
         return when (action) {
             Action.StartGame ->
                 state.copy(
-                    game = GameFeature.State(playerOne = state.playerOne, playerTwo = state.playerTwo)
+                    game = GameFeature.State(
+                        playerOne = state.playerOne,
+                        playerTwo = state.playerTwo
+                    )
                 ).noEffect()
 
             Action.EndGame ->
                 state.copy(game = null).noEffect()
 
-            is Action.StartGameFeatureAction -> {
-                when (action.action) {
-                    StartGameFeature.Action.StartGameTapped -> {
-                        return reduce(state, Action.StartGame) // Dispatch StartGame to self
-                    }
-                    else -> state.noEffect()
-                }
-            }
-
-            is Action.GameFeatureAction -> {
-                when (action.action) {
-                    GameFeature.Action.EndTapped -> {
-                        return reduce(state, Action.EndGame) // Dispatch EndGame to self
-                    }
-                    else -> state.noEffect()
-                }
-            }
+            else -> state.noEffect()
         }
     }
 }
@@ -71,8 +64,8 @@ val appStore: Store<AppFeature.State, AppFeature.Action> = createStore(
     // combine all feature reducers
     reducer = combine(
         AppFeature,
+        StartGameFeature.pullbackReducer(),
         GameFeature.pullbackReducer(),
-        StartGameFeature.pullbackReducer()
     )
 )
 

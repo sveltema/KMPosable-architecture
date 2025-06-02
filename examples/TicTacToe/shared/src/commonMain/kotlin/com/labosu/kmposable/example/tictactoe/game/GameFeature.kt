@@ -4,11 +4,8 @@ import com.labosu.kmposable.Reduced
 import com.labosu.kmposable.Reducer
 import com.labosu.kmposable.Store
 import com.labosu.kmposable.example.tictactoe.AppFeature
-import com.labosu.kmposable.example.tictactoe.start.StartGameFeature.Action
 import com.labosu.kmposable.noEffect
 import com.labosu.kmposable.optionalPullback
-import com.labosu.kmposable.withEffect
-import kotlin.random.Random
 
 
 object GameFeature : Reducer<GameFeature.State, GameFeature.Action> {
@@ -50,10 +47,8 @@ object GameFeature : Reducer<GameFeature.State, GameFeature.Action> {
     override fun reduce(state: State, action: Action): Reduced<State, Action> {
         return when (action) {
             is Action.CellTapped -> {
-                if (state.board.getCell(
-                        action.row,
-                        action.column
-                    ) != null || state.board.boardState != GameBoard.State.InPlay
+                if (state.board.getCell(action.row, action.column) != null ||
+                    state.board.boardState != GameBoard.State.InPlay
                 ) {
                     return state.noEffect()
                 }
@@ -87,16 +82,25 @@ object GameFeature : Reducer<GameFeature.State, GameFeature.Action> {
 // mapping from AppStore to GameFeatureStore
 fun Store<AppFeature.State, AppFeature.Action>.gameStore(): Store<GameFeature.State, GameFeature.Action> {
     return this.optionalScope(
-        toChildState = { it.game },
-        fromChildAction = { AppFeature.Action.GameFeatureAction(it) }
+        toChildState = mapToChildState,
+        fromChildAction = mapToParentAction
     )
 }
 
 // Game Reducer Pullback
 fun Reducer<GameFeature.State, GameFeature.Action>.pullbackReducer(): Reducer<AppFeature.State, AppFeature.Action> =
     optionalPullback(
-        mapToChildState = { it.game },
+        mapToChildState = mapToChildState,
         mapToChildAction = { if (it is AppFeature.Action.GameFeatureAction) it.action else null },
         mapToParentState = { appState, gameState -> appState.copy(game = gameState) },
-        mapToParentAction = { AppFeature.Action.GameFeatureAction(it) }
+        mapToParentAction = mapToParentAction
     )
+
+internal val mapToChildState: (AppFeature.State) -> GameFeature.State? = { it.game }
+
+internal val mapToParentAction: (GameFeature.Action) -> AppFeature.Action = {
+    when (it) {
+        GameFeature.Action.EndTapped -> AppFeature.Action.EndGame
+        else -> AppFeature.Action.GameFeatureAction(it)
+    }
+}

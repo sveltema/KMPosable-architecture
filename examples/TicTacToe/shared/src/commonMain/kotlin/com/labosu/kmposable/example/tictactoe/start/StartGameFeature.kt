@@ -34,7 +34,6 @@ object StartGameFeature : Reducer<StartGameFeature.State, StartGameFeature.Actio
             }
 
             Action.StartGameTapped -> state.noEffect()  // handled in AppFeature
-
         }
     }
 
@@ -56,7 +55,10 @@ object StartGameFeature : Reducer<StartGameFeature.State, StartGameFeature.Actio
         }
 
     internal val mapToParentAction: (Action) -> AppFeature.Action = {
-        AppFeature.Action.StartGameFeatureAction(it)
+        when (it) {
+            Action.StartGameTapped -> AppFeature.Action.StartGame
+            else -> AppFeature.Action.StartGameFeatureAction(it)
+        }
     }
 }
 
