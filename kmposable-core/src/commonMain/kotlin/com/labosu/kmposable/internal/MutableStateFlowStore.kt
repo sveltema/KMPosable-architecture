@@ -9,7 +9,6 @@ import com.labosu.kmposable.merge
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.ensureActive
@@ -26,7 +25,8 @@ import kotlinx.coroutines.launch
 
 internal class MutableStateFlowStore<State, Action : Any> private constructor(
     override val state: Flow<State>,
-    private val sendFn: (Action) -> Unit
+    private val sendFn: (Action) -> Unit,
+    private val sendAllFn: (Collection<Action>) -> Unit
 ) : Store<State, Action> {
 
     override fun <ChildState, ChildAction : Any> scope(
@@ -34,7 +34,8 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
         fromChildAction: (ChildAction) -> Action?
     ): Store<ChildState, ChildAction> = MutableStateFlowStore(
         state = state.map { toChildState(it) }.distinctUntilChanged(),
-        sendFn = { childAction -> fromChildAction(childAction)?.let { sendFn(it) } }
+        sendFn = { childAction -> fromChildAction(childAction)?.let { sendFn(it) } },
+        sendAllFn = { childActions -> sendAllFn(childActions.mapNotNull { fromChildAction(it) }) }
     )
 
     override fun <ChildState, ChildAction : Any> optionalScope(
@@ -42,21 +43,24 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
         fromChildAction: (ChildAction) -> Action?
     ): Store<ChildState, ChildAction> = MutableStateFlowStore(
         state = state.mapNotNull { toChildState(it) }.distinctUntilChanged(),
-        sendFn = { childAction -> fromChildAction(childAction)?.let { sendFn(it) } }
+        sendFn = { childAction -> fromChildAction(childAction)?.let { sendFn(it) } },
+        sendAllFn = { childActions -> sendAllFn(childActions.mapNotNull { fromChildAction(it) }) }
     )
 
     override fun <ChildState> scope(
         toChildState: (State) -> ChildState
     ): Store<ChildState, Action> = MutableStateFlowStore(
         state = state.map { toChildState(it) }.distinctUntilChanged(),
-        sendFn = sendFn
+        sendFn = sendFn,
+        sendAllFn = sendAllFn
     )
 
     override fun <ChildAction : Any> actionScope(
         fromChildAction: (ChildAction) -> Action?
     ): Store<State, ChildAction> = MutableStateFlowStore(
         state = state,
-        sendFn = { childAction: ChildAction -> fromChildAction(childAction)?.let { sendFn(it) } }
+        sendFn = { childAction: ChildAction -> fromChildAction(childAction)?.let { sendFn(it) } },
+        sendAllFn = { childActions -> sendAllFn(childActions.mapNotNull { fromChildAction(it) }) }
     )
 
     companion object {
@@ -126,24 +130,38 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
                 }
             }
 
-            return MutableStateFlowStore(mutableStateFlow, ::send)
+            fun sendAll(actions: Collection<Action>) {
+                if (actions.isEmpty()) return
+
+                val count = actions.size
+                //add all to bufferChannel, send last to trigger processing
+                actions.forEachIndexed { idx, action ->
+                    if (idx == count - 1) send(action)
+                    else bufferChannel.trySend(action)
+                }
+            }
+
+            return MutableStateFlowStore(mutableStateFlow, ::send, ::sendAll)
         }
 
-        class ReducerException(override val message: String?, override val cause: Throwable?) : Throwable(
-            message,
-            cause
-        )
+        class ReducerException(override val message: String?, override val cause: Throwable?) :
+            Throwable(
+                message,
+                cause
+            )
 
         private suspend fun <State, Action> ExceptionHandler.handleReduceException(
             state: State,
             action: Action,
             exception: Throwable
         ): Effect<Nothing> {
-            val wrappedException = ReducerException("[ReducerException]($action): $state", exception)
+            val wrappedException =
+                ReducerException("[ReducerException]($action): $state", exception)
             if (handleException(wrappedException)) return emptyEffect() else throw wrappedException
         }
 
-        class EffectException(override val message: String?, override val cause: Throwable?) : Throwable(message, cause)
+        class EffectException(override val message: String?, override val cause: Throwable?) :
+            Throwable(message, cause)
 
         private suspend fun ExceptionHandler.handleEffectException(exception: Throwable) {
             val wrappedException = EffectException("[EffectException]", exception)
@@ -152,5 +170,5 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
     }
 
     override fun send(action: Action) = sendFn(action)
-    override fun send(actions: Iterable<Action>) = actions.forEach(sendFn)
+    override fun sendAll(actions: Collection<Action>) = sendAllFn(actions)
 }

@@ -18,7 +18,7 @@ interface Store<State, Action : Any> {
      * Sends actions to be processed
      */
     fun send(action: Action)
-    fun send(actions: Iterable<Action>)
+    fun sendAll(actions: Collection<Action>)
 
     /**
      * Transforms this store in a more specific store that can only emit
