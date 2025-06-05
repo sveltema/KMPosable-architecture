@@ -3,7 +3,7 @@ package com.labosu.kmposable
 /**
  * Allows one to inject custom exception handling in a store
  */
-interface ExceptionHandler {
+fun interface ExceptionHandler {
 
     /**
      * Called whenever an exception is thrown during the reduce process

@@ -180,7 +180,7 @@ fun <ParentState, ParentAction, ChildState, ChildAction, ID> forEachReducer(
     val index = childStates.indexOfFirst { idSelector(it) == id }
 
     if (index == -1) {
-        // Optionally log if a child action is received for a non-existent ID
+        // Optionally throw if a child action is received for a non-existent ID
         return@Reducer Reduced(state)
     }
 
@@ -231,7 +231,7 @@ fun <ParentState, ParentAction, ChildState, ChildAction, ID> forEachMapReducer(
 
     val childStatesMap = getChildStatesMap(state)
 
-    // Optionally log if a child action is received for a non-existent ID
+    // Optionally throw if a child action is received for a non-existent ID
     val childState = childStatesMap[id] ?: return@Reducer Reduced(state)
 
     val reduced = childReducer.reduceScoped(childState, childAction)
