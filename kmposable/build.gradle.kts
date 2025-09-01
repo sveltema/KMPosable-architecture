@@ -13,7 +13,7 @@ kotlin {
     applyDefaultHierarchyTemplate()
 
     androidTarget {
-        publishAllLibraryVariants()
+        publishLibraryVariants()
         compilations.all {
             compileTaskProvider.configure {
                 compilerOptions {
