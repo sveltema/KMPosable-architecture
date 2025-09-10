@@ -25,7 +25,7 @@ import kotlin.random.Random
 private val cancellationMutex = Mutex()
 
 // the scope/tokenSet pair uses the scope for cancellation and tokenSet to control individual flow completion and cache cleanup
-private val cancellableFlowSignals = mutableMapOf<Any, Pair<MutableSharedFlow<Boolean>, MutableSet<Long>>>()
+private val cancellableFlowSignals = mutableMapOf<Any, Pair<MutableSharedFlow<Unit>, MutableSet<Long>>>()
 
 internal class CompletedException : Exception("Cancellable has completed")
 
@@ -38,7 +38,7 @@ fun <Action> Effect<Action>.cancellable(cancellationId: Any, cancelInFlight: Boo
         flow {
             val cancellationNotifier = cancellationMutex.withLock {
                 // cancel any active effects
-                if (cancelInFlight) cancellableFlowSignals.remove(cancellationId)?.first?.emit(true)
+                if (cancelInFlight) cancellableFlowSignals.remove(cancellationId)?.first?.emit(Unit)
                 val notifierTokenPair = cancellableFlowSignals.getOrPut(cancellationId) {
                     Pair(MutableSharedFlow(), mutableSetOf())
                 }
@@ -78,7 +78,7 @@ fun <Action> Effect<Action>.cancel(ids: Set<Any>): Effect<Action> = cancelEffect
 fun <Action> cancelEffect(id: Any): Effect<Action> = Effect {
     flow {
         cancellationMutex.withLock {
-            cancellableFlowSignals.remove(id)?.first?.emit(true) // send the cancellation signal
+            cancellableFlowSignals.remove(id)?.first?.emit(Unit) // send the cancellation signal
         }
     }
 }
@@ -87,7 +87,7 @@ fun <Action> cancelEffects(ids: Set<Any>): Effect<Action> = Effect {
     flow {
         cancellationMutex.withLock {
             ids.forEach { id ->
-                cancellableFlowSignals.remove(id)?.first?.emit(true) // send the cancellation signal
+                cancellableFlowSignals.remove(id)?.first?.emit(Unit) // send the cancellation signal
             }
         }
     }
