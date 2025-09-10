@@ -24,22 +24,22 @@ fun <Action> emptyEffect(): Effect<Action> = none
 // asEffect functions
 fun <Action> Flow<Action>.asEffect(): Effect<Action> = Effect { this }
 
-fun <Action> Action.asEffect(): Effect<Action> = flowOf(this).asEffect()
-fun <Action> Iterable<Action>.asEffect(): Effect<Action> = this.asFlow().asEffect()
+fun <Action> Action.asEffect(): Effect<Action> = Effect { flowOf(this) }
+fun <Action> Iterable<Action>.asEffect(): Effect<Action> = Effect { asFlow() }
 
-fun <Action> (() -> Action).asEffect(): Effect<Action> = flow { emit(invoke()) }.asEffect()
-fun <Action> (suspend () -> Action).asEffect(): Effect<Action> = flow { emit(invoke()) }.asEffect()
+fun <Action> (() -> Action).asEffect(): Effect<Action> = Effect { flow { emit(invoke()) } }
+fun <Action> (suspend () -> Action).asEffect(): Effect<Action> = Effect { flow { emit(invoke()) } }
 
-fun <Action> (() -> Unit).fireAndForget(): Effect<Action> = flow<Nothing> { invoke() }.asEffect() // never emits
-fun <Action> (suspend () -> Unit).fireAndForget(): Effect<Action> = flow<Nothing> { invoke() }.asEffect() // never emits
+fun <Action> (() -> Unit).fireAndForget(): Effect<Action> = Effect { flow<Nothing> { invoke() } }// never emits
+fun <Action> (suspend () -> Unit).fireAndForget(): Effect<Action> = Effect { flow<Nothing> { invoke() } }// never emits
 
 // transformations
 inline fun <Action, R> Effect<Action>.map(crossinline mapFn: suspend (Action) -> R): Effect<R> =
-    this.invoke().map { mapFn(it) }.asEffect()
+    Effect { this.invoke().map { mapFn(it) } }
 
-fun <Action> Iterable<Effect<Action>>.merge() = this.map { it.invoke() }.merge().asEffect()
+fun <Action> Iterable<Effect<Action>>.merge() = Effect { this.map { it.invoke() }.merge() }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-fun <Action> Iterable<Effect<Action>>.concatenate() = this.map { it.invoke() }.asFlow().flattenConcat().asEffect()
+fun <Action> Iterable<Effect<Action>>.concatenate() = Effect { this.map { it.invoke() }.asFlow().flattenConcat() }
 fun <Action> Effect<Action>.concatenate(other: Effect<Action>) =
-    this.invoke().onCompletion { if (it == null) emitAll(other.invoke()) }.asEffect()
+    Effect { this.invoke().onCompletion { if (it == null) emitAll(other.invoke()) } }
