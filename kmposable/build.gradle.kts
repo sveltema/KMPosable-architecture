@@ -2,18 +2,16 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.library")
-    kotlin("multiplatform")
     id("maven-publish")
     id("org.jetbrains.dokka")
+    kotlin("multiplatform")
 }
 
 kotlin {
     version = libs.versions.libraryVersion
 
-    applyDefaultHierarchyTemplate()
-
     androidTarget {
-        publishLibraryVariants()
+        publishLibraryVariants("release")
         compilations.all {
             compileTaskProvider.configure {
                 compilerOptions {
@@ -26,6 +24,8 @@ kotlin {
     iosX64()
     iosArm64()
     iosSimulatorArm64()
+
+    applyDefaultHierarchyTemplate()
 
     compilerOptions {
         allWarningsAsErrors.set(true)
