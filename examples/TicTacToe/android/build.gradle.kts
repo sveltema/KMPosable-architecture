@@ -6,11 +6,11 @@ plugins {
 
 android {
     namespace = "com.labosu.kmposable.example.tictactoe.android"
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         applicationId = "com.labosu.kmposable.example.tictactoe.android"
         minSdk = 33
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
     }
@@ -28,12 +28,13 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 dependencies {

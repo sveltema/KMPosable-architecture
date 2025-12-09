@@ -8,16 +8,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.labosu.kmposable.Store
-import com.labosu.kmposable.example.tictactoe.android.MyApplicationTheme
 import com.labosu.kmposable.example.tictactoe.start.StartGameFeature
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
 
 @Composable
 fun NewGameView(
@@ -57,28 +53,26 @@ fun NewGameView(
 @Preview(showBackground = true)
 @Composable
 fun NewGameViewPreview() {
-    MyApplicationTheme {
-        NewGameView(store = object : Store<StartGameFeature.State, StartGameFeature.Action> {
-            override val state = kotlinx.coroutines.flow.flowOf(StartGameFeature.State())
-            override fun <ChildAction : Any> actionScope(fromChildAction: (ChildAction) -> StartGameFeature.Action?): Store<StartGameFeature.State, ChildAction> =
-                this as Store<StartGameFeature.State, ChildAction>
+    NewGameView(store = object : Store<StartGameFeature.State, StartGameFeature.Action> {
+        override val state = kotlinx.coroutines.flow.flowOf(StartGameFeature.State())
+        override fun <ChildAction : Any> actionScope(fromChildAction: (ChildAction) -> StartGameFeature.Action?): Store<StartGameFeature.State, ChildAction> =
+            this as Store<StartGameFeature.State, ChildAction>
 
-            override fun <ChildState, ChildAction : Any> optionalScope(
-                toChildState: (StartGameFeature.State) -> ChildState?,
-                fromChildAction: (ChildAction) -> StartGameFeature.Action?
-            ): Store<ChildState, ChildAction> = this as Store<ChildState, ChildAction>
+        override fun <ChildState, ChildAction : Any> optionalScope(
+            toChildState: (StartGameFeature.State) -> ChildState?,
+            fromChildAction: (ChildAction) -> StartGameFeature.Action?
+        ): Store<ChildState, ChildAction> = this as Store<ChildState, ChildAction>
 
-            override fun <ChildState> scope(toChildState: (StartGameFeature.State) -> ChildState): Store<ChildState, StartGameFeature.Action> =
-                this as Store<ChildState, StartGameFeature.Action>
+        override fun <ChildState> scope(toChildState: (StartGameFeature.State) -> ChildState): Store<ChildState, StartGameFeature.Action> =
+            this as Store<ChildState, StartGameFeature.Action>
 
-            override fun <ChildState, ChildAction : Any> scope(
-                toChildState: (StartGameFeature.State) -> ChildState,
-                fromChildAction: (ChildAction) -> StartGameFeature.Action?
-            ): Store<ChildState, ChildAction> =
-                this as Store<ChildState, ChildAction>
+        override fun <ChildState, ChildAction : Any> scope(
+            toChildState: (StartGameFeature.State) -> ChildState,
+            fromChildAction: (ChildAction) -> StartGameFeature.Action?
+        ): Store<ChildState, ChildAction> =
+            this as Store<ChildState, ChildAction>
 
-            override fun send(action: StartGameFeature.Action) {}
-            override fun send(actions: Iterable<StartGameFeature.Action>) {}
-        })
-    }
+        override fun send(action: StartGameFeature.Action) {}
+        override fun sendAll(actions: Collection<StartGameFeature.Action>) {}
+    })
 }

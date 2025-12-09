@@ -7,13 +7,13 @@ minSdk = "26"
 compileSdk = "36"
 
 # Dependencies
-android-gradle-plugin = "8.13.0"
+android-gradle-plugin = "8.13.1"
 
-kotlin = "2.2.20"
+kotlin = "2.2.21"
 coroutines = "1.10.2"
-dokka = "2.0.0"
+dokka = "2.1.0"
 
-ktlint-gradle = "13.1.0"
+ktlint-gradle = "14.0.1"
 
 turbine = "1.2.1"
 
