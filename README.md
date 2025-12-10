@@ -163,17 +163,6 @@ val appReducer = loginReducer.ifCaseLet<AppState.LoggedOut, AppState, LoginActio
 )
 ```
 
-## Key Improvements Over Toggl's Implementation
-
-- **Kotlin Multiplatform** - Full KMM support for shared business logic
-- **Flow-Based Effects** - Better support for long-running operations
-- **Explicit Cancellation** - Fine-grained control over effect lifecycle
-- **Scoped Actions** - Automatic effect cancellation tied to coroutine scopes
-- **Performance Optimizations** - Improved action buffering and batching
-- **Sealed Class Support** - `ifCaseLet` reducer for type-safe sealed class composition
-- **Batch Actions** - `sendAll()` for efficiently processing multiple actions
-- **No Subscriptions** - Simplified API surface
-
 ## Project Structure
 
 - **kmposable-core** - Core architecture (Store, Reducer, Effect, etc.)
