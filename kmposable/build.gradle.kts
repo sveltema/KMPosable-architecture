@@ -15,7 +15,7 @@ kotlin {
         compilations.all {
             compileTaskProvider.configure {
                 compilerOptions {
-                    jvmTarget.set(JvmTarget.JVM_1_8)
+                    jvmTarget.set(JvmTarget.JVM_11)
                 }
             }
         }
@@ -49,8 +49,8 @@ android {
         minSdk = libs.versions.minSdk.get().toInt()
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
 
@@ -89,8 +89,10 @@ publishing {
             name = "github"
             url = uri("https://maven.pkg.github.com/sveltema/KMPosable-architecture")
             credentials {
-                username = project.extra.get("GITHUB_ACTOR") as String?
-                password = project.extra.get("GITHUB_TOKEN") as String?
+                username = project.findProperty("GITHUB_ACTOR") as String?
+                    ?: System.getenv("GITHUB_ACTOR")
+                password = project.findProperty("GITHUB_TOKEN") as String?
+                    ?: System.getenv("GITHUB_TOKEN")
             }
         }
     }

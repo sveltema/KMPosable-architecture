@@ -72,7 +72,7 @@ fun NewGameViewPreview() {
         ): Store<ChildState, ChildAction> =
             this as Store<ChildState, ChildAction>
 
-        override fun send(action: StartGameFeature.Action) {}
-        override fun sendAll(actions: Collection<StartGameFeature.Action>) {}
-    })
+            override fun send(action: StartGameFeature.Action) {}
+            override fun sendAll(actions: Collection<StartGameFeature.Action>) {}
+        })
 }

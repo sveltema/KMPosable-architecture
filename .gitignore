@@ -40,3 +40,4 @@ google-services.json
 *.hprof
 .kotlin
 xcuserdata
+.claude

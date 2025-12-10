@@ -6,16 +6,11 @@ import com.labosu.kmposable.Reduced
 import com.labosu.kmposable.Reducer
 import com.labosu.kmposable.ScopedAction
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.cancellable
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 
 /**
  * Created by Steven Veltema on 2022/12/28
@@ -25,44 +20,53 @@ import kotlinx.coroutines.launch
  * Once the scope becomes inactive, the effect will cancel
  */
 
-internal fun <Action> Effect<Action>.scoped(scope: CoroutineScope): Effect<Action> =
-    Effect {
-        // use a notifier to stop the flow immediately when the scope is cancelled
-        // the problem with `.takeWhile` is that it requires an additional emission
-        // before the flow is canceled
-        val notifier = channelFlow {
-            val waitJob = scope.launch {
-                // wait for scope to be cancelled
-                awaitCancellation()
-            }
-            // wait for job to complete
-            waitJob.join()
-            if (isActive) send(1)
-            close()
+/**
+ * Make an effect scoped to a coroutine scope.
+ *
+ * The effect will automatically cancel when the scope is cancelled.
+ * If the scope is already cancelled, returns an empty flow.
+ *
+ * This implementation uses Job.invokeOnCompletion for immediate, lightweight
+ * cancellation detection without the overhead of channelFlow or racing coroutines.
+ *
+ * @param scope The coroutine scope to bind this effect to
+ * @param onScopeCancelled Optional callback invoked when scope cancellation stops the effect
+ * @return Scoped effect that cancels with the scope
+ */
+internal fun <Action> Effect<Action>.scoped(
+    scope: CoroutineScope,
+    onScopeCancelled: (suspend () -> Unit)? = null
+): Effect<Action> = Effect {
+    if (!scope.isActive) {
+        return@Effect flow {
+            onScopeCancelled?.invoke()
         }
-
-        val innerFlow = this().cancellable()
-
-        flow {
-            try {
-                coroutineScope {
-                    val job = launch(start = CoroutineStart.UNDISPATCHED) {
-                        // collect until notifier closes
-                        notifier.collect()
-                        throw CompletedException()
-                    }
-                    innerFlow.collect { emit(it) }
-                    job.cancel()
-                }
-            } catch (e: CompletedException) {
-                // ignore the completed exception when the notifier cancelled
-                // the exception will short circuit the innerFlow.collect
-                // and the outer flow will finish and close
-            }
-        }
-            // ensures cancellation, but not immediately, waits for flow to emit complete
-            .takeWhile { scope.isActive }
     }
+
+    val innerFlow = this().cancellable()
+    val scopeJob = scope.coroutineContext[Job]
+
+    flow {
+        var scopeCancelled = false
+        val cancellationHandle = scopeJob?.invokeOnCompletion { cause ->
+            scopeCancelled = true
+        }
+
+        try {
+            // Collect from inner flow until scope is cancelled
+            innerFlow.collect { value ->
+                if (scopeCancelled || !scope.isActive) {
+                    throw CompletedException()
+                }
+                emit(value)
+            }
+        } catch (_: CompletedException) {
+            onScopeCancelled?.invoke()
+        } finally {
+            cancellationHandle?.dispose()
+        }
+    }
+}
 
 internal fun <State, Action> Reducer<State, Action>.reduceScoped(state: State, action: Action): Reduced<State, Action> {
     return if (action is ScopedAction) {

@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 internal class MutableStateFlowStore<State, Action : Any> private constructor(
     override val state: Flow<State>,
@@ -76,57 +78,65 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
             val storeMutateDispatcher = storeDispatcher.limitedParallelism(1)
             // the backing state flow for the store
             val mutableStateFlow = MutableStateFlow(initialState)
-            // buffer channel for buffering together quickly fired actions for better performance
-            val bufferChannel = Channel<Action>(Channel.UNLIMITED)
+            // action channel for queuing actions to be processed
+            val actionChannel = Channel<Action>(Channel.UNLIMITED)
+            // mutex to ensure only one processor runs at a time
+            val processorMutex = Mutex()
 
             fun send(action: Action) {
-                // send actions to buffer channel, and attempt to perform together with any waiting actions
-                bufferChannel.trySend(action)
+                // Add action to channel
+                actionChannel.trySend(action)
 
-                // launch in single parallel context
-                storeScope.launch(context = storeMutateDispatcher) {
-                    ensureActive()
-
-                    // get next X actions waiting in buffer channel and group together for faster processing
-                    // don't suspend waiting for next result, try to get one and fail if not present
-                    val bufferedActions = mutableListOf<Action>()
-                    while (true) {
-                        val element = bufferChannel.tryReceive().getOrNull() ?: break
-                        bufferedActions.add(element)
-                    }
-
-                    if (bufferedActions.isEmpty()) return@launch
-
-                    // gather all of the effects returned by the reducers
-                    var backingValue = mutableStateFlow.value
-                    val effects = bufferedActions.mapNotNull { action ->
+                // Try to acquire lock to process - if another processor is running, skip
+                if (processorMutex.tryLock()) {
+                    storeScope.launch(storeMutateDispatcher) {
                         try {
-                            reducer.reduceScoped(backingValue, action)
-                                .also { backingValue = it.state }
-                                .effect
-                        } catch (cause: Throwable) {
-                            exceptionHandler.handleReduceException(backingValue, action, cause)
-                            null
+                            // Keep processing batches until channel is truly empty
+                            while (true) {
+                                ensureActive()
+
+                                // Drain all available actions from channel and process as single batch
+                                val batch = generateSequence { actionChannel.tryReceive().getOrNull() }.toList()
+
+                                // Exit if no actions to process
+                                if (batch.isEmpty()) break
+
+                                // Process batch through reducer
+                                var backingValue = mutableStateFlow.value
+                                val effects = batch.mapNotNull { batchAction ->
+                                    try {
+                                        reducer.reduceScoped(backingValue, batchAction)
+                                            .also { backingValue = it.state }
+                                            .effect
+                                    } catch (cause: Throwable) {
+                                        exceptionHandler.handleReduceException(backingValue, batchAction, cause)
+                                        null
+                                    }
+                                }
+
+                                // set the final state
+                                mutableStateFlow.value = backingValue
+
+                                // Launch effects if any
+                                if (effects.isNotEmpty()) {
+                                    val effect = when {
+                                        effects.size == 1 -> effects.first()
+                                        else -> effects.merge()
+                                    }
+
+                                    ensureActive()
+
+                                    effect()
+                                        .catch { cause -> exceptionHandler.handleEffectException(cause) }
+                                        .onEach { resultAction -> send(resultAction) }
+                                        .flowOn(effectDispatcher)
+                                        .launchIn(storeScope)
+                                }
+                            }
+                        } finally {
+                            processorMutex.unlock()
                         }
                     }
-
-                    // set the final state
-                    mutableStateFlow.value = backingValue
-
-                    val effect = when {
-                        effects.isEmpty() -> return@launch
-                        effects.size == 1 -> effects.first()
-                        else -> effects.merge()
-                    }
-
-                    ensureActive()
-
-                    // collect the effects
-                    effect()
-                        .catch { cause -> exceptionHandler.handleEffectException(cause) }
-                        .onEach { action -> send(action) }
-                        .flowOn(effectDispatcher)
-                        .launchIn(storeScope)
                 }
             }
 
@@ -134,10 +144,10 @@ internal class MutableStateFlowStore<State, Action : Any> private constructor(
                 if (actions.isEmpty()) return
 
                 val count = actions.size
-                //add all to bufferChannel, send last to trigger processing
+                // Add all to channel, trigger processing with last one
                 actions.forEachIndexed { idx, action ->
                     if (idx == count - 1) send(action)
-                    else bufferChannel.trySend(action)
+                    else actionChannel.trySend(action)
                 }
             }
 

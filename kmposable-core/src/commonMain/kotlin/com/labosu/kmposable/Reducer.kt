@@ -145,6 +145,75 @@ fun <ChildState, ParentState, ChildAction, ParentAction> Reducer<ChildState, Chi
     }
 
 /**
+ * Transforms a reducer that operates on a specific sealed class case into a reducer that operates
+ * on the parent sealed class type.
+ *
+ * This is particularly useful for composing reducers that work with different cases of a sealed class,
+ * such as navigation states, loading states, or authentication states.
+ *
+ * If the parent state is not an instance of the expected case type, or if the parent action cannot
+ * be mapped to a child action, the parent state is returned unchanged.
+ *
+ * @param CaseState The specific sealed class case type that this reducer operates on.
+ * @param ParentState The parent sealed class type.
+ * @param ChildAction The type of the child action.
+ * @param ParentAction The type of the parent action.
+ * @param mapToChildAction A function to attempt to convert a parent action into a child action.
+ *                         Returns `null` if the action is not relevant to this case.
+ * @param mapToParentState A function to update the parent state with the new case state.
+ *                         Typically just returns the case state as it already is a ParentState.
+ * @param mapToParentAction A function to convert a child action (typically from an effect) into a parent action.
+ * @return A [Reducer] that operates on the parent sealed class, delegating to the child reducer
+ *         when the state matches the expected case.
+ *
+ * @sample
+ * ```
+ * sealed class AppState {
+ *     object Loading : AppState()
+ *     data class LoggedIn(val user: User) : AppState()
+ *     data class LoggedOut(val loginForm: LoginForm) : AppState()
+ * }
+ *
+ * sealed class AppAction {
+ *     data class Login(val action: LoginAction) : AppAction()
+ *     data class Home(val action: HomeAction) : AppAction()
+ * }
+ *
+ * val loginReducer: Reducer<AppState.LoggedOut, LoginAction> = // ...
+ *
+ * val appReducer = loginReducer.ifCaseLet<AppState.LoggedOut, AppState, LoginAction, AppAction>(
+ *     mapToChildAction = { (it as? AppAction.Login)?.action },
+ *     mapToParentState = { _, loggedOut -> loggedOut },
+ *     mapToParentAction = { AppAction.Login(it) }
+ * )
+ * ```
+ */
+inline fun <reified CaseState : ParentState, ParentState, ChildAction, ParentAction>
+Reducer<CaseState, ChildAction>.ifCaseLet(
+    crossinline mapToChildAction: (ParentAction) -> ChildAction?,
+    crossinline mapToParentState: (ParentState, CaseState) -> ParentState,
+    crossinline mapToParentAction: (ChildAction) -> ParentAction
+): Reducer<ParentState, ParentAction> =
+    Reducer { state, action ->
+        // Extract child action, or return unchanged if not applicable
+        val childAction = mapToChildAction(action)
+            ?: return@Reducer Reduced<ParentState, ParentAction>(state)
+
+        // Check if state is the expected case type
+        val caseState = state as? CaseState
+            ?: return@Reducer Reduced<ParentState, ParentAction>(state)
+
+        // Apply child reducer to case state
+        val (newCaseState, childEffect) = this.reduce(caseState, childAction)
+
+        // Map back to parent
+        Reduced(
+            mapToParentState(state, newCaseState),
+            childEffect?.map { mapToParentAction(it) }
+        )
+    }
+
+/**
  * A higher-order reducer that operates on a collection of child states.
  *
  * It identifies the target child state based on an ID extracted from the parent action,
